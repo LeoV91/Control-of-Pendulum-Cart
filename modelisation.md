@@ -25,7 +25,7 @@ Le montage du systeme réel et l'implémentationd des méthodes de controle dév
 | **Total estimé** | **~400-450 g** | Hors marge de conception |
 
 Le systeme total (en considérant une approximation des dimentions et de la disposition des équipements) est représenté schematiquement ci-dessous :
-
+IMAGE ICI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ![Architecture du projet](images/architecture.png)
 
 La suite de ce document apporte plus de détails concernant le choix de chaque équipement.
@@ -54,6 +54,11 @@ La suite de ce document apporte plus de détails concernant le choix de chaque �
 
 **Modèle retenu : Moto-réducteurs DC avec encodeur intégré JGA25-370** (12 V, réduction ~1:150, encodeur magnétique quadrature intégré).
 
+IMAGE ICI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+![Architecture du projet](images/architecture.png)
+
+Une fiche technique du moto réducteur DC JGA25-370 est disponible ci-contre : LIEN ICI !!!!!!!!!!!!!!!!!!!
+
 Avantages de ce choix plutôt qu'un servo ou un moteur brushless :
 - L'**encodeur intégré** est indispensable : c'est lui qui donne la mesure de `x` et `x_dot` (odométrie par comptage d'impulsions), nécessaire pour le retour d'état complet (LQR/LQI) qu'on a construit précédemment — sans cette mesure, le sous-espace `[x, x_dot]` n'est pas observable (cf. l'analyse `obsv(A,C)` faite plus tôt dans le projet).
 - Un servo continu n'offre pas nativement ce retour de position/vitesse.
@@ -77,7 +82,12 @@ Un moto-réducteur JGA25-370 délivre **0.3 à 0.5 N.m** en couple continu selon
 *NOTA : le choix de ce modèle industriel en particulier plutot qu'un autre concurent présentant les mêmes caractéristiques est basé sur les retours et conseils des utilisateurs des équipements de ce type.*
 
 ### 5. Calculateur / carte électronique (interfaçage MATLAB/Simulink)
-**Recommandation retenue : STM32 Nucleo**, pour la robustesse temps réel de la boucle d'équilibrage — c'est le facteur le plus critique pour ce système (contrairement à un simple asservissement de position, une gigue de boucle peut ici faire diverger le pendule).
+**Choix technique retenu : STM32 Nucleo**, pour la robustesse temps réel de la boucle d'équilibrage — c'est le facteur le plus critique pour ce système (contrairement à un simple asservissement de position, une gigue de boucle peut ici faire diverger le pendule).
+
+IMAGE ICI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+![Architecture du projet](images/architecture.png)
+
+Une fiche technique de la carte électronique STM32 Nucleo est disponible ci-contre : LIEN ICI !!!!!!!!!!!!!!!!!!!
 
 La documentation sur le sujet des cartes permettant de transvaser depuis MATLAB/Simulink relativement facilement a mené à trois options :
 
@@ -89,6 +99,11 @@ La documentation sur le sujet des cartes permettant de transvaser depuis MATLAB/
 
 
 ### 6. Capteurs
+
+IMAGE ICI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+![Architecture du projet](images/architecture.png)
+
+Une fiche technique de l'IMU MPU6050 est disponible ci-contre : LIEN ICI !!!!!!!!!!!!!!!!!!!
 
 - **IMU 6 axes (accéléromètre + gyroscope), type MPU6050** — I2C, bien supporté nativement par les support packages Arduino/Nucleo. Fournit `theta` (par fusion accéléro/gyro, filtre complémentaire ou de Kalman) et `theta_dot` (directement via le gyroscope).
 - **Encodeurs quadrature** intégrés aux moto-réducteurs — fournissent `x` (intégration du comptage d'impulsions × périmètre roue / résolution encodeur) et `x_dot` (dérivée ou comptage différentiel par fenêtre de temps).
@@ -103,7 +118,7 @@ La documentation sur le sujet des cartes permettant de transvaser depuis MATLAB/
 
 
 
-### 9. Paramètres physiques mis à jour du modèle
+### 9. Modélisation du systeme et linéarisation
 
 Ces valeurs remplacent les approximations initiales et alimentent directement la Partie 2 :
 
@@ -125,32 +140,30 @@ g = 9.81 m/s²
 
 ### 1. Coordonnées généralisées et hypothèses
 
-- `x` : position du point de contact roue/sol (roulement sans glissement supposé : `x = R * phi`, `phi` = angle de rotation de la roue)
-- `theta` : angle d'inclinaison du pendule par rapport à la verticale (0 = position d'équilibre haute)
-- `tau` : couple moteur net appliqué à la roue (entrée de commande `u`)
+- `x` : position du point de contact roue/sol (roulement sans glissement supposé : `x = R * $\phi$`, `$\phi$` = angle de rotation de la roue)
+- `$\theta$` : angle d'inclinaison du pendule par rapport à la verticale ($\theta$ = position d'équilibre haute)
+- `$\tau$` : couple moteur net appliqué à la roue (entrée de commande `u`)
 - Modèle plan (mouvement 2D dans le plan sagittal), pas de glissement latéral
 
 Position du centre de gravité du pendule :
 ```
-x_p = x + L*sin(theta)
-y_p = R + L*cos(theta)
+x_p = x + L*sin($\theta$)
+y_p = R + L*cos($\theta$)
 ```
 
 ### 2. Énergies cinétique et potentielle (Lagrangien)
 
-**Énergie cinétique de la roue** (translation + rotation propre, `phi_dot = x_dot/R`) :
-```
-T_roue = (1/2)*M*x_dot^2 + (1/2)*I_w*(x_dot/R)^2
-```
+**Énergie cinétique de la roue** (translation + rotation propre, φ̇ = ẋ/R) :
+
+> T_roue = ½\theta·M·ẋ² + ½·I_w·(ẋ/R)²
 
 **Énergie cinétique du pendule** (translation du CG + rotation propre) :
-```
-x_p_dot = x_dot + L*cos(theta)*theta_dot
-y_p_dot = -L*sin(theta)*theta_dot
 
-T_pendule = (1/2)*m*(x_p_dot^2 + y_p_dot^2) + (1/2)*I_p*theta_dot^2
-          = (1/2)*m*[x_dot^2 + 2*L*cos(theta)*x_dot*theta_dot + L^2*theta_dot^2] + (1/2)*I_p*theta_dot^2
-```
+> ẋ_p = ẋ + L·cos(θ)·θ̇
+> ẏ_p = −L·sin(θ)·θ̇
+>
+> T_pendule = ½·m·(ẋ_p² + ẏ_p²) + ½·I_p·θ̇²
+> T_pendule = ½·m·[ẋ² + 2·L·cos()·ẋ·θ̇ + L²·θ̇²] + ½·I_p·θ̇²
 
 **Énergie potentielle** (hauteur du CG du pendule, terme constant `R` omis) :
 ```
