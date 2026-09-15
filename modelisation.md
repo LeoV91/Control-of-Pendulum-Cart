@@ -1,4 +1,4 @@
-# Segway (pendule inversé) — Dimensionnement physique et modélisation
+# Segway (pendule inversé) — Dimensionnement physique et sélection des équipements
 
 Ce document couvre deux volets :
 1. **Dimensionnement physique réel du robot** (mécanique, matériaux, motorisation, électronique, alimentation), avec des choix compatibles MATLAB/Simulink.
