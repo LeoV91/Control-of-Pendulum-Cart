@@ -2,7 +2,8 @@
 
 Ce document traite du **Dimensionnement physique réel du robot** (mécanique, matériaux, motorisation, électronique, alimentation), avec des choix compatibles MATLAB/Simulink.
 Notons que ce document n'est pour l'instant qu'une prospection des équipements permettant la réalisation d'un modèle référence. 
-Le montage du systeme réel et l'implémentationd des méthodes de controle dévelopées (donc hardware in the loop) fera l'objet d'un document futur.
+Le montage du systeme réel et l'implémentation des méthodes de controle dévelopées (donc hardware in the loop) fera l'objet d'un document futur.
+Notons aussi que l'architecture restera approximative et sera étudiée plus en détail dans le document mentionné ci-dessus.
 
 ### Présentation des composants retenus et du systeme
 
